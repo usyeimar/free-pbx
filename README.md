@@ -58,13 +58,11 @@ En resumen: pasas de cero a una central telefónica IP empresarial funcional con
 cp .env.example .env
 nano .env
 
-# 2. Construir imagen y levantar
+# 2. Construir imagen, levantar e instalar FreePBX
+#    (el script instala FreePBX automáticamente en el primer arranque)
 sudo ./scripts/start.sh
 
-# 3. Instalar FreePBX (solo la primera vez)
-sudo ./scripts/install.sh
-
-# 4. Acceder → http://<tu-ip>
+# 3. Acceder → http://<tu-ip>
 ```
 
 > La primera construcción tarda ~15-20 min (compila Asterisk desde source).
@@ -78,7 +76,6 @@ sudo ./scripts/install.sh
 | `sudo ./scripts/start.sh` | Build + compose up + iptables RTP |
 | `sudo ./scripts/start.sh 10000-20000` | Rango RTP personalizado |
 | `sudo ./scripts/stop.sh` | Detiene los contenedores |
-| `sudo ./scripts/install.sh` | Instala FreePBX en el contenedor |
 | `./scripts/logs.sh` | Logs de FreePBX en vivo |
 | `./scripts/logs.sh db` | Logs de MariaDB |
 | `sudo ./scripts/tls.sh dominio.com email` | Certbot Let's Encrypt |
@@ -138,9 +135,8 @@ sudo ./scripts/install.sh
 │       ├── my.cnf              Configuración MariaDB
 │       └── init.sql            Creación de bases de datos
 ├── scripts/
-│   ├── start.sh                Build + levantar + iptables RTP
+│   ├── start.sh                Build + levantar + iptables RTP + instalar FreePBX
 │   ├── stop.sh                 Detener
-│   ├── install.sh              Instalar FreePBX
 │   ├── clean.sh                Limpieza total
 │   ├── logs.sh                 Ver logs
 │   └── tls.sh                  Configurar HTTPS
