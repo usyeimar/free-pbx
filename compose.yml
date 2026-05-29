@@ -1,0 +1,75 @@
+###############################################################################
+# FreePBX 17 - Docker Compose (build desde source)
+###############################################################################
+
+networks:
+  pbxnet:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: freepbxint
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
+
+volumes:
+  mysql_data:
+  freepbx_var:
+  freepbx_etc:
+
+services:
+  # ─── Base de datos ──────────────────────────────────────────────────────────
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/mariadb/my.cnf:/etc/mysql/my.cnf:ro
+      - ./config/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      pbxnet:
+        ipv4_address: 172.25.0.10
+
+  # ─── FreePBX + Asterisk (build local) ─────────────────────────────────────
+  freepbx:
+    build: ./source
+    image: freepbx-local:17
+    restart: always
+    environment:
+      TZ: ${TZ:-UTC}
+    ports:
+      - "8080:80/tcp"
+      - "443:443/tcp"
+      - "5060:5060/udp"
+    volumes:
+      - freepbx_var:/var
+      - freepbx_etc:/etc
+    networks:
+      pbxnet:
+        ipv4_address: 172.25.0.20
+    depends_on:
+      - db
+
+  # ─── Fail2ban ──────────────────────────────────────────────────────────────
+  fail2ban:
+    image: lscr.io/linuxserver/fail2ban:latest
+    container_name: fail2ban
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      PUID: 1000
+      PGID: 2000
+      TZ: ${TZ:-UTC}
+    volumes:
+      - freepbx_var:/remotelogs/freepbx:ro
+      - ./config/fail2ban/jail.local:/config/fail2ban/jail.local
+      - ./config/fail2ban/filter.d/asterisk.conf:/config/fail2ban/filter.d/asterisk.conf
+    depends_on:
+      - freepbx
