@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.freepbx.org/wp-content/uploads/2024/02/FreePBX-logo.png" alt="FreePBX" width="280"/>
+  <img src="assets/freepbx-logo.png" alt="FreePBX" width="200"/>
 </p>
 
 <h1 align="center">FreePBX 17</h1>
